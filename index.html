@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>RoBoT Terminal</title>
 
-<!-- TERMINAL STYLE -->
+<!-- TERMINAL STYLING -->
 <style>
     body {
         background: #000;
@@ -18,12 +18,13 @@
 
     .terminal-container {
         position: absolute;
-        top: 0; left: 0; right: 0; bottom: 0;
+        top: 0; left: 0; right: 0; bottom: 50px;
         padding: 20px;
         overflow-y: auto;
         box-sizing: border-box;
         scrollbar-width: thin;
         scrollbar-color: #003d2d #000;
+        line-height: 1.4em;
     }
 
     /* Custom Scrollbar */
@@ -45,8 +46,14 @@
     }
 
     #input-line {
+        position: absolute;
+        bottom: 0; left: 0; right: 0;
+        padding: 12px 20px;
+        background: #000;
+        box-sizing: border-box;
         display: flex;
-        margin-top: 10px;
+        align-items: center;
+        border-top: 1px solid #003d2d;
     }
 
     #prompt {
@@ -62,9 +69,9 @@
         color: #00ff9d;
         outline: none;
     }
-
 </style>
 </head>
+
 <body>
 
 <div class="terminal-container" id="terminal">
@@ -81,43 +88,44 @@
 const terminal = document.getElementById("terminal");
 const inputField = document.getElementById("terminal-input");
 
-// Typewriter effect
-function typeWriter(text, callback) {
-    let i = 0;
-    let output = "";
-
-    function step() {
-        output += text.charAt(i);
-        rendered.innerHTML = output.replace(/\n/g, "<br>");
-        i++;
-
-        if (i < text.length) {
-            setTimeout(step, 12); // typing speed
-        } else {
-            if (callback) callback();
-        }
-    }
-
-    const rendered = document.createElement("div");
-    rendered.className = "line";
-    terminal.appendChild(rendered);
-    step();
-}
-
-// Add a line instantly
-function printLine(text) {
+// PRINT A LINE INSTANTLY
+function printLine(text = "") {
     const div = document.createElement("div");
     div.className = "line";
     div.textContent = text;
     terminal.appendChild(div);
+    scrollBottom();
 }
 
-// Auto scroll to bottom
+// TYPEWRITER EFFECT (ORAM's message only)
+function typeWriter(text, callback) {
+    let i = 0;
+    let out = "";
+
+    const line = document.createElement("div");
+    line.className = "line";
+    terminal.appendChild(line);
+
+    function step() {
+        out += text.charAt(i);
+        line.textContent = out;
+        i++;
+
+        if (i < text.length) {
+            setTimeout(step, 12);
+        } else {
+            if (callback) callback();
+        }
+    }
+    step();
+}
+
+// ALWAYS SCROLL TO BOTTOM
 function scrollBottom() {
     terminal.scrollTop = terminal.scrollHeight;
 }
 
-// MAIN SEND HANDLER
+// HANDLE INPUT
 inputField.addEventListener("keydown", function (e) {
     if (e.key === "Enter") {
         const userInput = inputField.value.trim();
@@ -125,9 +133,10 @@ inputField.addEventListener("keydown", function (e) {
 
         // Print user command
         printLine("> " + userInput);
+
         inputField.value = "";
 
-        // Call ORAM
+        // CALL ORAM v4 BACKEND
         fetch("https://oram-public.onrender.com", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -135,18 +144,19 @@ inputField.addEventListener("keydown", function (e) {
         })
         .then(res => res.json())
         .then(data => {
-            // Add spacing line
+            // MEDIUM spacing between user and ORAM
             printLine("");
 
-            // Add ORAM prefix
-            const response = ":: " + data.response;
+            // PREFIX (always renders instantly)
+            printLine("::");
 
-            // Typewriter effect for ORAM's reply
-            typeWriter(response, scrollBottom);
+            // TYPE ORAM'S MESSAGE BELOW PREFIX
+            typeWriter(data.response, scrollBottom);
         })
         .catch(() => {
             printLine("");
-            typeWriter(":: [Connection error: ORAM unreachable]", scrollBottom);
+            printLine("::");
+            typeWriter("[Connection error: ORAM unreachable]", scrollBottom);
         });
     }
 });
