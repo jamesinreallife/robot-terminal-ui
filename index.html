@@ -5,124 +5,151 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>RoBoT Terminal</title>
 
+<!-- TERMINAL STYLE -->
 <style>
     body {
-        background: #000000;
+        background: #000;
         margin: 0;
         padding: 0;
         font-family: "Courier New", monospace;
-        color: #00ff66;
+        color: #00ff9d;
         overflow: hidden;
     }
 
-    #terminal-container {
+    .terminal-container {
+        position: absolute;
+        top: 0; left: 0; right: 0; bottom: 0;
+        padding: 20px;
+        overflow-y: auto;
         box-sizing: border-box;
-        width: 100vw;
-        height: 100vh;
-        padding: 12px;
-        display: flex;
-        flex-direction: column;
+        scrollbar-width: thin;
+        scrollbar-color: #003d2d #000;
     }
 
-    #output {
-        flex: 1;
-        overflow-y: auto;
-        padding-right: 4px;
+    /* Custom Scrollbar */
+    .terminal-container::-webkit-scrollbar {
+        width: 10px;
+    }
+    .terminal-container::-webkit-scrollbar-track {
+        background: #000;
+    }
+    .terminal-container::-webkit-scrollbar-thumb {
+        background-color: #003d2d;
+        border-radius: 5px;
+        border: 2px solid #000;
+    }
+
+    .line {
         white-space: pre-wrap;
-        word-wrap: break-word;
-        font-size: 16px;
-        line-height: 20px;
+        margin-bottom: 6px;
     }
 
     #input-line {
         display: flex;
-        align-items: center;
-        font-size: 16px;
+        margin-top: 10px;
     }
 
     #prompt {
-        margin-right: 8px;
-        flex-shrink: 0;
+        margin-right: 6px;
     }
 
-    #cmd {
-        flex: 1;
-        background: transparent;
+    input {
+        background: none;
         border: none;
-        outline: none;
-        color: #00ff66;
+        flex: 1;
         font-family: inherit;
-        font-size: inherit;
-        padding: 4px 0;
+        font-size: 1em;
+        color: #00ff9d;
+        outline: none;
     }
 
-    @media (max-width: 600px) {
-        #terminal-container { padding: 8px; }
-        #output { font-size: 14px; line-height: 18px; }
-        #input-line { font-size: 14px; }
-    }
 </style>
 </head>
-
 <body>
 
-<div id="terminal-container">
-    <div id="output">RoBoT Terminal Online\nType "help" to begin.\n</div>
+<div class="terminal-container" id="terminal">
+    <div class="line">RoBoT Terminal Online</div>
+    <div class="line">Type "help" to begin.</div>
+</div>
 
-    <div id="input-line">
-        <div id="prompt">></div>
-        <input 
-            id="cmd" 
-            type="text" 
-            autocomplete="off" 
-            autocorrect="off" 
-            autocapitalize="none" 
-            spellcheck="false"
-        />
-    </div>
+<div id="input-line">
+    <div id="prompt">&gt;</div>
+    <input id="terminal-input" autocomplete="off" autofocus />
 </div>
 
 <script>
-    // THIS is the part that must point to your ORAM backend:
-    const endpoint = "https://oram-public.onrender.com";
+const terminal = document.getElementById("terminal");
+const inputField = document.getElementById("terminal-input");
 
-    const output = document.getElementById("output");
-    const cmd = document.getElementById("cmd");
+// Typewriter effect
+function typeWriter(text, callback) {
+    let i = 0;
+    let output = "";
 
-    function print(text) {
-        output.textContent += text + "\n";
-        output.scrollTop = output.scrollHeight;
-    }
+    function step() {
+        output += text.charAt(i);
+        rendered.innerHTML = output.replace(/\n/g, "<br>");
+        i++;
 
-    async function sendCommand(command) {
-        print("> " + command);
-
-        try {
-            const res = await fetch(endpoint, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ command })
-            });
-
-            const data = await res.json();
-            print(data.response || "[No response from ORAM]");
-        } catch (e) {
-            print("[Connection error: ORAM unreachable]");
+        if (i < text.length) {
+            setTimeout(step, 12); // typing speed
+        } else {
+            if (callback) callback();
         }
     }
 
-    cmd.addEventListener("keydown", (e) => {
-        if (e.key === "Enter") {
-            const command = cmd.value.trim();
-            cmd.value = "";
-            sendCommand(command);
-        }
-    });
+    const rendered = document.createElement("div");
+    rendered.className = "line";
+    terminal.appendChild(rendered);
+    step();
+}
 
-    window.addEventListener("load", () => {
-        setTimeout(() => cmd.focus(), 200);
-    });
-    window.addEventListener("touchstart", () => cmd.focus());
+// Add a line instantly
+function printLine(text) {
+    const div = document.createElement("div");
+    div.className = "line";
+    div.textContent = text;
+    terminal.appendChild(div);
+}
+
+// Auto scroll to bottom
+function scrollBottom() {
+    terminal.scrollTop = terminal.scrollHeight;
+}
+
+// MAIN SEND HANDLER
+inputField.addEventListener("keydown", function (e) {
+    if (e.key === "Enter") {
+        const userInput = inputField.value.trim();
+        if (!userInput) return;
+
+        // Print user command
+        printLine("> " + userInput);
+        inputField.value = "";
+
+        // Call ORAM
+        fetch("https://oram-public.onrender.com", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ command: userInput })
+        })
+        .then(res => res.json())
+        .then(data => {
+            // Add spacing line
+            printLine("");
+
+            // Add ORAM prefix
+            const response = ":: " + data.response;
+
+            // Typewriter effect for ORAM's reply
+            typeWriter(response, scrollBottom);
+        })
+        .catch(() => {
+            printLine("");
+            typeWriter(":: [Connection error: ORAM unreachable]", scrollBottom);
+        });
+    }
+});
 </script>
 
 </body>
