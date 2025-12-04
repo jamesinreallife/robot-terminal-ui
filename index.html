@@ -45,7 +45,6 @@
         margin-bottom: 6px;
     }
 
-    /* INPUT BAR */
     #input-area {
         padding: 12px 20px;
         display: flex;
@@ -95,7 +94,7 @@
         position: absolute;
         left: 0;
         opacity: 0;
-        caret-color: transparent; /* HIDE REAL CARET */
+        caret-color: transparent;
     }
 </style>
 </head>
@@ -104,7 +103,6 @@
 
 <div id="terminal">
     <div class="line">RoBoT Terminal Online</div>
-    <div class="line">Type "help" to begin.</div>
 </div>
 
 <div id="input-area">
@@ -136,14 +134,14 @@ function printLine(text = "") {
     scrollBottom();
 }
 
-/* TYPEWRITER — 100ms */
+/* TYPEWRITER — 90ms per char */
 function typeWriter(text, element, callback) {
     let i = 0;
     function step() {
         element.textContent += text.charAt(i);
         i++;
         if (i < text.length) {
-            setTimeout(step, 100);
+            setTimeout(step, 90);
         } else if (callback) callback();
     }
     step();
