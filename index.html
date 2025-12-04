@@ -45,6 +45,7 @@
         margin-bottom: 6px;
     }
 
+    /* INPUT BAR */
     #input-area {
         padding: 12px 20px;
         display: flex;
@@ -52,6 +53,7 @@
         background: #000;
         border-top: 1px solid #003d2d;
         box-sizing: border-box;
+        position: relative;
     }
 
     #prompt {
@@ -66,6 +68,29 @@
         font-size: 1em;
         color: #00ff9d;
         outline: none;
+        position: relative;
+        padding-right: 12px;
+    }
+
+    /* BLINKING CURSOR */
+    #cursor {
+        width: 10px;
+        height: 1.1em;
+        background: #00ff9d;
+        margin-left: 2px;
+        animation: blink 0.8s steps(1) infinite;
+    }
+
+    @keyframes blink {
+        0%   { opacity: 1; }
+        50%  { opacity: 0; }
+        100% { opacity: 1; }
+    }
+
+    #input-wrapper {
+        display: flex;
+        align-items: center;
+        flex-grow: 1;
     }
 </style>
 </head>
@@ -77,15 +102,20 @@
     <div class="line">Type "help" to begin.</div>
 </div>
 
+<!-- INPUT BAR WITH BLINKING CURSOR -->
 <div id="input-area">
     <div id="prompt">&gt;</div>
-    <input id="terminal-input" autocomplete="off" autofocus />
+    <div id="input-wrapper">
+        <input id="terminal-input" autocomplete="off" autofocus />
+        <div id="cursor"></div>
+    </div>
 </div>
 
 <script>
 const terminal = document.getElementById("terminal");
 const inputField = document.getElementById("terminal-input");
 
+/* PRINT LINE */
 function printLine(text = "") {
     const div = document.createElement("div");
     div.className = "line";
@@ -94,13 +124,14 @@ function printLine(text = "") {
     scrollBottom();
 }
 
+/* TYPEWRITER EFFECT — 28ms PER CHARACTER */
 function typeWriter(text, element, callback) {
     let i = 0;
     function step() {
         element.textContent += text.charAt(i);
         i++;
         if (i < text.length) {
-            setTimeout(step, 12);
+            setTimeout(step, 28);  // <<< SLOW + DRAMATIC SPEED
         } else if (callback) {
             callback();
         }
@@ -108,10 +139,12 @@ function typeWriter(text, element, callback) {
     step();
 }
 
+/* SCROLL */
 function scrollBottom() {
     terminal.scrollTop = terminal.scrollHeight;
 }
 
+/* HANDLE INPUT */
 inputField.addEventListener("keydown", async function (e) {
     if (e.key === "Enter") {
         const userInput = inputField.value.trim();
@@ -129,11 +162,11 @@ inputField.addEventListener("keydown", async function (e) {
 
             const data = await res.json();
 
-            printLine(""); // spacing
+            printLine("");
 
             const line = document.createElement("div");
             line.className = "line";
-            line.textContent = ":: ";
+            line.textContent = ">> ";
             terminal.appendChild(line);
 
             typeWriter(data.response, line, scrollBottom);
@@ -141,7 +174,7 @@ inputField.addEventListener("keydown", async function (e) {
         } catch (err) {
             const line = document.createElement("div");
             line.className = "line";
-            line.textContent = ":: ";
+            line.textContent = ">> ";
             terminal.appendChild(line);
 
             typeWriter("[Connection error: ORAM unreachable]", line, scrollBottom);
