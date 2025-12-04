@@ -72,13 +72,14 @@
         padding-right: 12px;
     }
 
-    /* BLINKING CURSOR */
+    /* BLOCK CURSOR █ */
     #cursor {
-        width: 10px;
-        height: 1.1em;
-        background: #00ff9d;
-        margin-left: 2px;
-        animation: blink 0.8s steps(1) infinite;
+        font-family: "Courier New", monospace;
+        font-size: 1em;
+        line-height: 1;
+        color: #00ff9d;
+        margin-left: 3px;
+        animation: blink 0.9s steps(1) infinite;
     }
 
     @keyframes blink {
@@ -102,12 +103,12 @@
     <div class="line">Type "help" to begin.</div>
 </div>
 
-<!-- INPUT BAR WITH BLINKING CURSOR -->
+<!-- INPUT BAR WITH BLOCK CURSOR -->
 <div id="input-area">
     <div id="prompt">&gt;</div>
     <div id="input-wrapper">
         <input id="terminal-input" autocomplete="off" autofocus />
-        <div id="cursor"></div>
+        <div id="cursor">█</div>
     </div>
 </div>
 
@@ -124,14 +125,14 @@ function printLine(text = "") {
     scrollBottom();
 }
 
-/* TYPEWRITER EFFECT — 28ms PER CHARACTER */
+/* TYPEWRITER EFFECT — 85ms PER CHAR */
 function typeWriter(text, element, callback) {
     let i = 0;
     function step() {
         element.textContent += text.charAt(i);
         i++;
         if (i < text.length) {
-            setTimeout(step, 28);  // <<< SLOW + DRAMATIC SPEED
+            setTimeout(step, 85);  // <<< VERY SLOW (B)
         } else if (callback) {
             callback();
         }
@@ -144,7 +145,7 @@ function scrollBottom() {
     terminal.scrollTop = terminal.scrollHeight;
 }
 
-/* HANDLE INPUT */
+/* INPUT HANDLING */
 inputField.addEventListener("keydown", async function (e) {
     if (e.key === "Enter") {
         const userInput = inputField.value.trim();
