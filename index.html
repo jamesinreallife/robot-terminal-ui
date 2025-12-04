@@ -5,7 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>RoBoT Terminal</title>
 
-<!-- TERMINAL STYLING -->
 <style>
     body {
         background: #000;
@@ -13,28 +12,30 @@
         padding: 0;
         font-family: "Courier New", monospace;
         color: #00ff9d;
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
         overflow: hidden;
     }
 
-    .terminal-container {
-        position: absolute;
-        top: 0; left: 0; right: 0; bottom: 50px;
-        padding: 20px;
+    /* TERMINAL WINDOW (scrolls) */
+    #terminal {
+        flex: 1;
         overflow-y: auto;
+        padding: 20px;
         box-sizing: border-box;
         scrollbar-width: thin;
         scrollbar-color: #003d2d #000;
-        line-height: 1.4em;
     }
 
-    /* Custom Scrollbar */
-    .terminal-container::-webkit-scrollbar {
+    /* CUSTOM SCROLLBAR */
+    #terminal::-webkit-scrollbar {
         width: 10px;
     }
-    .terminal-container::-webkit-scrollbar-track {
+    #terminal::-webkit-scrollbar-track {
         background: #000;
     }
-    .terminal-container::-webkit-scrollbar-thumb {
+    #terminal::-webkit-scrollbar-thumb {
         background-color: #003d2d;
         border-radius: 5px;
         border: 2px solid #000;
@@ -45,25 +46,24 @@
         margin-bottom: 6px;
     }
 
-    #input-line {
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
+    /* INPUT BAR — ALWAYS VISIBLE */
+    #input-area {
         padding: 12px 20px;
-        background: #000;
-        box-sizing: border-box;
         display: flex;
         align-items: center;
+        background: #000;
         border-top: 1px solid #003d2d;
+        box-sizing: border-box;
     }
 
     #prompt {
         margin-right: 6px;
     }
 
-    input {
+    #terminal-input {
         background: none;
         border: none;
-        flex: 1;
+        flex-grow: 1;
         font-family: inherit;
         font-size: 1em;
         color: #00ff9d;
@@ -74,12 +74,14 @@
 
 <body>
 
-<div class="terminal-container" id="terminal">
+<!-- TERMINAL WINDOW -->
+<div id="terminal">
     <div class="line">RoBoT Terminal Online</div>
     <div class="line">Type "help" to begin.</div>
 </div>
 
-<div id="input-line">
+<!-- INPUT BAR -->
+<div id="input-area">
     <div id="prompt">&gt;</div>
     <input id="terminal-input" autocomplete="off" autofocus />
 </div>
@@ -88,7 +90,7 @@
 const terminal = document.getElementById("terminal");
 const inputField = document.getElementById("terminal-input");
 
-// PRINT A LINE INSTANTLY
+/* PRINT LINE IMMEDIATELY */
 function printLine(text = "") {
     const div = document.createElement("div");
     div.className = "line";
@@ -97,7 +99,7 @@ function printLine(text = "") {
     scrollBottom();
 }
 
-// TYPEWRITER EFFECT (ORAM's message only)
+/* TYPEWRITER EFFECT */
 function typeWriter(text, callback) {
     let i = 0;
     let out = "";
@@ -110,7 +112,6 @@ function typeWriter(text, callback) {
         out += text.charAt(i);
         line.textContent = out;
         i++;
-
         if (i < text.length) {
             setTimeout(step, 12);
         } else {
@@ -120,44 +121,41 @@ function typeWriter(text, callback) {
     step();
 }
 
-// ALWAYS SCROLL TO BOTTOM
+/* SCROLL TO BOTTOM */
 function scrollBottom() {
     terminal.scrollTop = terminal.scrollHeight;
 }
 
-// HANDLE INPUT
-inputField.addEventListener("keydown", function (e) {
+/* HANDLE USER INPUT */
+inputField.addEventListener("keydown", async function (e) {
     if (e.key === "Enter") {
         const userInput = inputField.value.trim();
         if (!userInput) return;
 
-        // Print user command
         printLine("> " + userInput);
-
         inputField.value = "";
 
-        // CALL ORAM v4 BACKEND
-        fetch("https://oram-public.onrender.com", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ command: userInput })
-        })
-        .then(res => res.json())
-        .then(data => {
-            // MEDIUM spacing between user and ORAM
+        try {
+            const res = await fetch("https://oram-public.onrender.com", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ command: userInput })
+            });
+
+            const data = await res.json();
+
+            // Spacing before ORAM reply
             printLine("");
+            printLine("::"); // prefix
 
-            // PREFIX (always renders instantly)
-            printLine("::");
-
-            // TYPE ORAM'S MESSAGE BELOW PREFIX
+            // Typewriter effect for ORAM message
             typeWriter(data.response, scrollBottom);
-        })
-        .catch(() => {
+
+        } catch (err) {
             printLine("");
             printLine("::");
             typeWriter("[Connection error: ORAM unreachable]", scrollBottom);
-        });
+        }
     }
 });
 </script>
