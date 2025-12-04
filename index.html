@@ -45,7 +45,6 @@
         margin-bottom: 6px;
     }
 
-    /* INPUT BAR */
     #input-area {
         padding: 12px 20px;
         display: flex;
@@ -53,32 +52,32 @@
         background: #000;
         border-top: 1px solid #003d2d;
         box-sizing: border-box;
-        position: relative;
     }
 
     #prompt {
         margin-right: 6px;
     }
 
-    #terminal-input {
-        background: none;
-        border: none;
+    /* INPUT TEXT DISPLAY AREA (custom, so the cursor can be positioned correctly) */
+    #input-wrapper {
+        display: flex;
+        align-items: center;
         flex-grow: 1;
-        font-family: inherit;
+        position: relative;
+        font-family: "Courier New", monospace;
         font-size: 1em;
         color: #00ff9d;
-        outline: none;
-        position: relative;
-        padding-right: 12px;
+        white-space: pre;
+    }
+
+    #input-text {
+        color: #00ff9d;
     }
 
     /* BLOCK CURSOR █ */
     #cursor {
-        font-family: "Courier New", monospace;
-        font-size: 1em;
-        line-height: 1;
+        margin-left: 2px;
         color: #00ff9d;
-        margin-left: 3px;
         animation: blink 0.9s steps(1) infinite;
     }
 
@@ -88,10 +87,11 @@
         100% { opacity: 1; }
     }
 
-    #input-wrapper {
-        display: flex;
-        align-items: center;
-        flex-grow: 1;
+    /* HIDDEN REAL INPUT FIELD (captures typing, not shown) */
+    #terminal-input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
     }
 </style>
 </head>
@@ -103,18 +103,28 @@
     <div class="line">Type "help" to begin.</div>
 </div>
 
-<!-- INPUT BAR WITH BLOCK CURSOR -->
+<!-- NEW INPUT SYSTEM -->
 <div id="input-area">
     <div id="prompt">&gt;</div>
+
     <div id="input-wrapper">
+        <span id="input-text"></span>
+        <span id="cursor">█</span>
         <input id="terminal-input" autocomplete="off" autofocus />
-        <div id="cursor">█</div>
     </div>
+
 </div>
 
 <script>
 const terminal = document.getElementById("terminal");
-const inputField = document.getElementById("terminal-input");
+const hiddenInput = document.getElementById("terminal-input");
+const inputText = document.getElementById("input-text");
+const cursor = document.getElementById("cursor");
+
+/* Sync visible text with hidden input */
+hiddenInput.addEventListener("input", () => {
+    inputText.textContent = hiddenInput.value;
+});
 
 /* PRINT LINE */
 function printLine(text = "") {
@@ -125,14 +135,14 @@ function printLine(text = "") {
     scrollBottom();
 }
 
-/* TYPEWRITER EFFECT — 85ms PER CHAR */
+/* TYPEWRITER — 110ms per char */
 function typeWriter(text, element, callback) {
     let i = 0;
     function step() {
         element.textContent += text.charAt(i);
         i++;
         if (i < text.length) {
-            setTimeout(step, 85);  // <<< VERY SLOW (B)
+            setTimeout(step, 110);
         } else if (callback) {
             callback();
         }
@@ -145,20 +155,21 @@ function scrollBottom() {
     terminal.scrollTop = terminal.scrollHeight;
 }
 
-/* INPUT HANDLING */
-inputField.addEventListener("keydown", async function (e) {
+/* INPUT HANDLER */
+hiddenInput.addEventListener("keydown", async function (e) {
     if (e.key === "Enter") {
-        const userInput = inputField.value.trim();
-        if (!userInput) return;
+        const userText = hiddenInput.value.trim();
+        if (!userText) return;
 
-        printLine("> " + userInput);
-        inputField.value = "";
+        printLine("> " + userText);
+        hiddenInput.value = "";
+        inputText.textContent = "";
 
         try {
             const res = await fetch("https://oram-public.onrender.com", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ command: userInput })
+                body: JSON.stringify({ command: userText })
             });
 
             const data = await res.json();
@@ -182,6 +193,10 @@ inputField.addEventListener("keydown", async function (e) {
         }
     }
 });
+
+/* Always focus hidden input on click so typing works */
+document.body.addEventListener("mousedown", () => hiddenInput.focus());
+hiddenInput.focus();
 </script>
 
 </body>
