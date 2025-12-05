@@ -28,22 +28,15 @@
         line-height: 1.4em;
     }
 
-    #terminal::-webkit-scrollbar {
-        width: 10px;
-    }
-    #terminal::-webkit-scrollbar-track {
-        background: #000;
-    }
+    #terminal::-webkit-scrollbar { width: 10px; }
+    #terminal::-webkit-scrollbar-track { background: #000; }
     #terminal::-webkit-scrollbar-thumb {
         background-color: #003d2d;
         border-radius: 5px;
         border: 2px solid #000;
     }
 
-    .line {
-        white-space: pre-wrap;
-        margin-bottom: 6px;
-    }
+    .line { white-space: pre-wrap; margin-bottom: 6px; }
 
     #input-area {
         padding: 12px 20px;
@@ -57,9 +50,7 @@
         color: #00ff9d;
     }
 
-    #prompt {
-        margin-right: 6px;
-    }
+    #prompt { margin-right: 6px; }
 
     #input-wrapper {
         position: relative;
@@ -69,12 +60,8 @@
         white-space: pre;
     }
 
-    #input-text {
-        color: #00ff9d;
-        white-space: pre;
-    }
+    #input-text { color: #00ff9d; white-space: pre; }
 
-    /* BLOCK CURSOR █ */
     #cursor {
         color: #00ff9d;
         margin-left: 0;
@@ -84,12 +71,11 @@
     }
 
     @keyframes blink {
-        0%   { opacity: 1; }
-        50%  { opacity: 0; }
+        0% { opacity: 1; }
+        50% { opacity: 0; }
         100% { opacity: 1; }
     }
 
-    /* HIDDEN REAL INPUT FIELD */
     #terminal-input {
         position: absolute;
         left: 0;
@@ -107,7 +93,6 @@
 
 <div id="input-area">
     <div id="prompt">&gt;</div>
-
     <div id="input-wrapper">
         <span id="input-text"></span>
         <span id="cursor">█</span>
@@ -120,12 +105,10 @@ const terminal = document.getElementById("terminal");
 const hiddenInput = document.getElementById("terminal-input");
 const inputText = document.getElementById("input-text");
 
-/* Mirror typed text & force cursor to follow */
 hiddenInput.addEventListener("input", () => {
     inputText.textContent = hiddenInput.value;
 });
 
-/* PRINT LINE */
 function printLine(text = "") {
     const div = document.createElement("div");
     div.className = "line";
@@ -134,25 +117,22 @@ function printLine(text = "") {
     scrollBottom();
 }
 
-/* TYPEWRITER — 90ms per char */
 function typeWriter(text, element, callback) {
     let i = 0;
     function step() {
         element.textContent += text.charAt(i);
         i++;
         if (i < text.length) {
-            setTimeout(step, 90);
+            setTimeout(step, 80);  // <<< UPDATED TYPING SPEED (80ms)
         } else if (callback) callback();
     }
     step();
 }
 
-/* SCROLL */
 function scrollBottom() {
     terminal.scrollTop = terminal.scrollHeight;
 }
 
-/* INPUT HANDLER */
 hiddenInput.addEventListener("keydown", async function (e) {
     if (e.key === "Enter") {
         const userInput = hiddenInput.value.trim();
@@ -192,7 +172,6 @@ hiddenInput.addEventListener("keydown", async function (e) {
     }
 });
 
-/* Keep input focused */
 document.body.addEventListener("mousedown", () => hiddenInput.focus());
 hiddenInput.focus();
 </script>
