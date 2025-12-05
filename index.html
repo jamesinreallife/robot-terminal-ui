@@ -65,7 +65,6 @@
         white-space: pre;
     }
 
-    /* BLOCK CURSOR █ */
     #cursor {
         color: #00ff9d;
         margin-left: 0;
@@ -121,14 +120,14 @@ function printLine(text = "") {
     scrollBottom();
 }
 
-/* TYPEWRITER — 65ms PER CHARACTER */
+/* TYPEWRITER — 40ms PER CHARACTER (much faster) */
 function typeWriter(text, element, callback) {
     let i = 0;
     function step() {
         element.textContent += text.charAt(i);
         i++;
         if (i < text.length) {
-            setTimeout(step, 65);  // <<< UPDATED SPEED
+            setTimeout(step, 40);  // <<< UPDATED SPEED
         } else if (callback) callback();
     }
     step();
