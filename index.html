@@ -60,8 +60,12 @@
         white-space: pre;
     }
 
-    #input-text { color: #00ff9d; white-space: pre; }
+    #input-text {
+        color: #00ff9d;
+        white-space: pre;
+    }
 
+    /* BLOCK CURSOR █ */
     #cursor {
         color: #00ff9d;
         margin-left: 0;
@@ -117,13 +121,14 @@ function printLine(text = "") {
     scrollBottom();
 }
 
+/* TYPEWRITER — 65ms PER CHARACTER */
 function typeWriter(text, element, callback) {
     let i = 0;
     function step() {
         element.textContent += text.charAt(i);
         i++;
         if (i < text.length) {
-            setTimeout(step, 80);  // <<< UPDATED TYPING SPEED (80ms)
+            setTimeout(step, 65);  // <<< UPDATED SPEED
         } else if (callback) callback();
     }
     step();
