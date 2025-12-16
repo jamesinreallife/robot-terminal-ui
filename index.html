@@ -120,14 +120,14 @@ function printLine(text = "") {
     scrollBottom();
 }
 
-/* TYPEWRITER — 40ms PER CHARACTER (much faster) */
+/* TYPEWRITER — 40ms PER CHARACTER */
 function typeWriter(text, element, callback) {
     let i = 0;
     function step() {
         element.textContent += text.charAt(i);
         i++;
         if (i < text.length) {
-            setTimeout(step, 40);  // <<< UPDATED SPEED
+            setTimeout(step, 40);
         } else if (callback) callback();
     }
     step();
@@ -148,7 +148,7 @@ hiddenInput.addEventListener("keydown", async function (e) {
         inputText.textContent = "";
 
         try {
-            const res = await fetch("https://oram-public.onrender.com", {
+            const res = await fetch("https://oram-public-1.onrender.com", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ command: userInput })
