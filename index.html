@@ -6,85 +6,63 @@
 <title>RoBoT Terminal</title>
 
 <style>
-    body {
-        background: #000;
-        margin: 0;
-        padding: 0;
-        font-family: "Courier New", monospace;
-        color: #00ff9d;
-        height: 100vh;
-        display: flex;
-        flex-direction: column;
-        overflow: hidden;
-    }
+body {
+    background: #000;
+    margin: 0;
+    padding: 0;
+    font-family: "Courier New", monospace;
+    color: #00ff9d;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
 
-    #terminal {
-        flex: 1;
-        overflow-y: auto;
-        padding: 20px;
-        box-sizing: border-box;
-        scrollbar-width: thin;
-        scrollbar-color: #003d2d #000;
-        line-height: 1.4em;
-    }
+#terminal {
+    flex: 1;
+    overflow-y: auto;
+    padding: 20px;
+    box-sizing: border-box;
+}
 
-    #terminal::-webkit-scrollbar { width: 10px; }
-    #terminal::-webkit-scrollbar-track { background: #000; }
-    #terminal::-webkit-scrollbar-thumb {
-        background-color: #003d2d;
-        border-radius: 5px;
-        border: 2px solid #000;
-    }
+.line {
+    white-space: pre-wrap;
+    margin-bottom: 6px;
+}
 
-    .line { white-space: pre-wrap; margin-bottom: 6px; }
+#input-area {
+    padding: 12px 20px;
+    display: flex;
+    align-items: center;
+    background: #000;
+    border-top: 1px solid #003d2d;
+}
 
-    #input-area {
-        padding: 12px 20px;
-        display: flex;
-        align-items: center;
-        background: #000;
-        border-top: 1px solid #003d2d;
-        box-sizing: border-box;
-        font-family: "Courier New", monospace;
-        font-size: 1em;
-        color: #00ff9d;
-    }
+#prompt {
+    margin-right: 6px;
+}
 
-    #prompt { margin-right: 6px; }
+#input-wrapper {
+    position: relative;
+    flex-grow: 1;
+}
 
-    #input-wrapper {
-        position: relative;
-        display: inline-flex;
-        align-items: center;
-        flex-grow: 1;
-        white-space: pre;
-    }
+#input-text {
+    white-space: pre;
+}
 
-    #input-text {
-        color: #00ff9d;
-        white-space: pre;
-    }
+#cursor {
+    animation: blink 1s steps(1) infinite;
+}
 
-    #cursor {
-        color: #00ff9d;
-        margin-left: 0;
-        padding-left: 0;
-        font-size: 1em;
-        animation: blink 1s steps(1) infinite;
-    }
+@keyframes blink {
+    50% { opacity: 0; }
+}
 
-    @keyframes blink {
-        0% { opacity: 1; }
-        50% { opacity: 0; }
-        100% { opacity: 1; }
-    }
-
-    #terminal-input {
-        position: absolute;
-        left: 0;
-        opacity: 0;
-        caret-color: transparent;
-    }
+#terminal-input {
+    position: absolute;
+    opacity: 0;
+}
 </style>
 </head>
 
@@ -97,22 +75,25 @@
 <div id="input-area">
     <div id="prompt">&gt;</div>
     <div id="input-wrapper">
-        <span id="input-text"></span>
-        <span id="cursor">█</span>
-        <input id="terminal-input" autocomplete="off" autofocus />
+        <span id="input-text"></span><span id="cursor">█</span>
+        <input id="terminal-input" autofocus />
     </div>
 </div>
 
 <script>
 const terminal = document.getElementById("terminal");
-const hiddenInput = document.getElementById("terminal-input");
+const input = document.getElementById("terminal-input");
 const inputText = document.getElementById("input-text");
 
-hiddenInput.addEventListener("input", () => {
-    inputText.textContent = hiddenInput.value;
+input.addEventListener("input", () => {
+    inputText.textContent = input.value;
 });
 
-function printLine(text = "") {
+function scrollBottom() {
+    terminal.scrollTop = terminal.scrollHeight;
+}
+
+function printLine(text) {
     const div = document.createElement("div");
     div.className = "line";
     div.textContent = text;
@@ -120,64 +101,55 @@ function printLine(text = "") {
     scrollBottom();
 }
 
-/* TYPEWRITER — 40ms PER CHARACTER */
-function typeWriter(text, element, callback) {
+function typeWriter(text, element, cb) {
     let i = 0;
     function step() {
-        element.textContent += text.charAt(i);
-        i++;
-        if (i < text.length) {
-            setTimeout(step, 40);
-        } else if (callback) callback();
+        element.textContent += text.charAt(i++);
+        if (i < text.length) setTimeout(step, 35);
+        else if (cb) cb();
     }
     step();
 }
 
-function scrollBottom() {
-    terminal.scrollTop = terminal.scrollHeight;
-}
+input.addEventListener("keydown", async e => {
+    if (e.key !== "Enter") return;
 
-hiddenInput.addEventListener("keydown", async function (e) {
-    if (e.key === "Enter") {
-        const userInput = hiddenInput.value.trim();
-        if (!userInput) return;
+    const userInput = input.value.trim();
+    if (!userInput) return;
 
-        printLine("> " + userInput);
+    printLine("> " + userInput);
+    input.value = "";
+    inputText.textContent = "";
 
-        hiddenInput.value = "";
-        inputText.textContent = "";
+    try {
+        const res = await fetch("https://oram-public-1.onrender.com", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ command: userInput })
+        });
 
-        try {
-            const res = await fetch("https://oram-public-1.onrender.com", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ command: userInput })
-            });
+        const data = await res.json();
 
-            const data = await res.json();
+        if (!data.messages) return;
 
-            printLine("");
-
+        for (const msg of data.messages) {
             const line = document.createElement("div");
             line.className = "line";
-            line.textContent = ">> ";
+            line.textContent = `[${msg.agent}] `;
             terminal.appendChild(line);
 
-            typeWriter(data.response, line, scrollBottom);
-
-        } catch {
-            const line = document.createElement("div");
-            line.className = "line";
-            line.textContent = ">> ";
-            terminal.appendChild(line);
-
-            typeWriter("[Connection error: ORAM unreachable]", line, scrollBottom);
+            await new Promise(resolve =>
+                typeWriter(msg.text, line, resolve)
+            );
         }
+
+    } catch {
+        printLine("[SYSTEM] Connection error");
     }
 });
 
-document.body.addEventListener("mousedown", () => hiddenInput.focus());
-hiddenInput.focus();
+document.body.addEventListener("mousedown", () => input.focus());
+input.focus();
 </script>
 
 </body>
