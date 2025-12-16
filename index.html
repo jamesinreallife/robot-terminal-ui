@@ -50,6 +50,7 @@ body {
     margin-bottom: 6px;
 }
 
+/* INPUT */
 #input-area {
     display: flex;
     padding: 12px 20px;
@@ -81,6 +82,15 @@ body {
     position: absolute;
     opacity: 0;
 }
+
+/* ROBO COLOURS — HIGH CONTRAST, DISTINCT */
+.agent-ORAM    { color: #5DEAFF; }   /* Cyan */
+.agent-PULSAR  { color: #7CFFD4; }   /* Mint Green */
+.agent-KAIROS  { color: #FF9F1C; }   /* Amber */
+.agent-LUMENA  { color: #FF9DE6; }   /* Light Magenta */
+.agent-SEVER   { color: #D6E0FF; }   /* Cool Silver */
+.agent-SYSTEM  { color: #00FF9D; }   /* Terminal Green */
+
 </style>
 </head>
 
@@ -134,14 +144,6 @@ function scrollBottom() {
     terminal.scrollTop = terminal.scrollHeight;
 }
 
-function printLine(text) {
-    const div = document.createElement("div");
-    div.className = "line";
-    div.textContent = text;
-    terminal.appendChild(div);
-    scrollBottom();
-}
-
 function typeWriter(text, el) {
     let i = 0;
     function step() {
@@ -158,7 +160,12 @@ input.addEventListener("keydown", async e => {
     const command = input.value.trim();
     if (!command) return;
 
-    printLine("> " + command);
+    const userLine = document.createElement("div");
+    userLine.className = "line";
+    userLine.textContent = "> " + command;
+    terminal.appendChild(userLine);
+    scrollBottom();
+
     input.value = "";
     inputText.textContent = "";
 
@@ -173,24 +180,23 @@ input.addEventListener("keydown", async e => {
         });
 
         const data = await res.json();
-
         if (!data.messages) return;
 
         for (const m of data.messages) {
             const line = document.createElement("div");
-            line.className = "line";
+            line.className = `line agent-${m.agent}`;
             line.textContent = `[${m.agent}] `;
             terminal.appendChild(line);
             typeWriter(m.text, line);
         }
 
     } catch {
-        printLine("[SYSTEM] Connection error");
+        const err = document.createElement("div");
+        err.className = "line agent-SYSTEM";
+        err.textContent = "[SYSTEM] Connection error";
+        terminal.appendChild(err);
     }
 });
-
-document.body.addEventListener("mousedown", () => input.focus());
-input.focus();
 </script>
 
 </body>
