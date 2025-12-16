@@ -16,7 +16,6 @@ body {
     flex-direction: column;
 }
 
-/* ROBO BUTTON PANEL */
 #robo-panel {
     display: flex;
     gap: 10px;
@@ -38,7 +37,6 @@ body {
     color: #000;
 }
 
-/* TERMINAL */
 #terminal {
     flex: 1;
     overflow-y: auto;
@@ -50,7 +48,6 @@ body {
     margin-bottom: 6px;
 }
 
-/* INPUT */
 #input-area {
     display: flex;
     padding: 12px 20px;
@@ -84,13 +81,12 @@ body {
 }
 
 /* ROBO COLOURS — FINAL */
-.agent-ORAM    { color: #00FFB3; }   /* Bright Terminal Green */
-.agent-PULSAR  { color: #3FA9FF; }   /* Bright Blue */
-.agent-KAIROS  { color: #FF9F1C; }   /* Amber */
-.agent-LUMENA  { color: #FF9DE6; }   /* Light Magenta */
-.agent-SEVER   { color: #FF3B3B; }   /* Bright Red */
-.agent-SYSTEM  { color: #00FF9D; }   /* Terminal Green */
-
+.agent-ORAM    { color: #00FFB3; }
+.agent-PULSAR  { color: #3FA9FF; }
+.agent-KAIROS  { color: #FF9F1C; }
+.agent-LUMENA  { color: #FF9DE6; }
+.agent-SEVER   { color: #FF3B3B; }
+.agent-SYSTEM  { color: #00FF9D; }
 </style>
 </head>
 
@@ -136,15 +132,19 @@ input.addEventListener("input", () => {
     inputText.textContent = input.value;
 });
 
-function scrollBottom() {
-    terminal.scrollTop = terminal.scrollHeight;
+/* ELASTIC SCROLL — SINGLE SOURCE OF TRUTH */
+function scrollToBottom() {
+    requestAnimationFrame(() => {
+        terminal.scrollTop = terminal.scrollHeight;
+    });
 }
 
 function typeWriter(text, el) {
     let i = 0;
     function step() {
         el.textContent += text.charAt(i++);
-        if (i < text.length) setTimeout(step, 35);
+        scrollToBottom();
+        if (i < text.length) setTimeout(step, 30);
     }
     step();
 }
@@ -159,7 +159,7 @@ input.addEventListener("keydown", async e => {
     userLine.className = "line";
     userLine.textContent = "> " + command;
     terminal.appendChild(userLine);
-    scrollBottom();
+    scrollToBottom();
 
     input.value = "";
     inputText.textContent = "";
@@ -182,6 +182,7 @@ input.addEventListener("keydown", async e => {
             line.className = `line agent-${m.agent}`;
             line.textContent = `[${m.agent}] `;
             terminal.appendChild(line);
+            scrollToBottom();
             typeWriter(m.text, line);
         }
 
@@ -190,6 +191,7 @@ input.addEventListener("keydown", async e => {
         err.className = "line agent-SYSTEM";
         err.textContent = "[SYSTEM] Connection error";
         terminal.appendChild(err);
+        scrollToBottom();
     }
 });
 </script>
