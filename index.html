@@ -83,12 +83,12 @@ body {
     opacity: 0;
 }
 
-/* ROBO COLOURS — HIGH CONTRAST, DISTINCT */
-.agent-ORAM    { color: #5DEAFF; }   /* Cyan */
-.agent-PULSAR  { color: #7CFFD4; }   /* Mint Green */
+/* ROBO COLOURS — FINAL */
+.agent-ORAM    { color: #00FFB3; }   /* Brighter Terminal Green */
+.agent-PULSAR  { color: #FFF200; }   /* Bright Yellow */
 .agent-KAIROS  { color: #FF9F1C; }   /* Amber */
 .agent-LUMENA  { color: #FF9DE6; }   /* Light Magenta */
-.agent-SEVER   { color: #D6E0FF; }   /* Cool Silver */
+.agent-SEVER   { color: #FF3B3B; }   /* Bright Red */
 .agent-SYSTEM  { color: #00FF9D; }   /* Terminal Green */
 
 </style>
@@ -96,7 +96,6 @@ body {
 
 <body>
 
-<!-- ROBO CONTROLS -->
 <div id="robo-panel">
     <button class="robo-btn" data-robo="ORAM">ORAM</button>
     <button class="robo-btn" data-robo="PULSAR">PULSAR</button>
@@ -105,7 +104,6 @@ body {
     <button class="robo-btn" data-robo="SEVER">SEVER</button>
 </div>
 
-<!-- TERMINAL -->
 <div id="terminal">
     <div class="line">RoBoT Terminal Online</div>
 </div>
@@ -126,7 +124,6 @@ const buttons = document.querySelectorAll(".robo-btn");
 
 let forcedSpeaker = null;
 
-/* BUTTON HANDLING */
 buttons.forEach(btn => {
     btn.addEventListener("click", () => {
         buttons.forEach(b => b.classList.remove("active"));
@@ -135,7 +132,6 @@ buttons.forEach(btn => {
     });
 });
 
-/* INPUT MIRROR */
 input.addEventListener("input", () => {
     inputText.textContent = input.value;
 });
@@ -153,7 +149,6 @@ function typeWriter(text, el) {
     step();
 }
 
-/* SEND MESSAGE */
 input.addEventListener("keydown", async e => {
     if (e.key !== "Enter") return;
 
