@@ -186,4 +186,14 @@ input.addEventListener("keydown", async e => {
         }
 
     } catch {
-        const err =
+        const err = document.createElement("div");
+        err.className = "line agent-SYSTEM";
+        err.textContent = "[SYSTEM] Connection error";
+        terminal.appendChild(err);
+        scrollToBottom();
+    }
+});
+</script>
+
+</body>
+</html>
