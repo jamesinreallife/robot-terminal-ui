@@ -113,14 +113,6 @@ body {
 </div>
 
 <script>
-/* FORCE ABOUT LABEL — WIX SAFE */
-document.addEventListener("DOMContentLoaded", () => {
-    const oramBtn = document.querySelector('[data-robo="ORAM"]');
-    if (oramBtn) {
-        oramBtn.textContent = "ABOUT";
-    }
-});
-
 const terminal = document.getElementById("terminal");
 const input = document.getElementById("terminal-input");
 const inputText = document.getElementById("input-text");
@@ -136,4 +128,62 @@ buttons.forEach(btn => {
     });
 });
 
-input.addEventListener("input",
+input.addEventListener("input", () => {
+    inputText.textContent = input.value;
+});
+
+function scrollToBottom() {
+    requestAnimationFrame(() => {
+        terminal.scrollTop = terminal.scrollHeight;
+    });
+}
+
+function typeWriter(text, el) {
+    let i = 0;
+    function step() {
+        el.textContent += text.charAt(i++);
+        scrollToBottom();
+        if (i < text.length) setTimeout(step, 30);
+    }
+    step();
+}
+
+input.addEventListener("keydown", async e => {
+    if (e.key !== "Enter") return;
+
+    const command = input.value.trim();
+    if (!command) return;
+
+    const userLine = document.createElement("div");
+    userLine.className = "line";
+    userLine.textContent = "> " + command;
+    terminal.appendChild(userLine);
+    scrollToBottom();
+
+    input.value = "";
+    inputText.textContent = "";
+
+    try {
+        const res = await fetch("https://robot-unified-backend.onrender.com", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                command,
+                forced_speaker: forcedSpeaker
+            })
+        });
+
+        const data = await res.json();
+        if (!data.messages) return;
+
+        for (const m of data.messages) {
+            const line = document.createElement("div");
+            line.className = `line agent-${m.agent}`;
+            line.textContent = `[${m.agent}] `;
+            terminal.appendChild(line);
+            scrollToBottom();
+            typeWriter(m.text, line);
+        }
+
+    } catch {
+        const err =
