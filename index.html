@@ -80,7 +80,7 @@ body {
     opacity: 0;
 }
 
-/* ROBO COLOURS — FINAL */
+/* ROBO COLOURS */
 .agent-ORAM    { color: #00FFB3; }
 .agent-PULSAR  { color: #3FA9FF; }
 .agent-KAIROS  { color: #FF9F1C; }
@@ -113,6 +113,14 @@ body {
 </div>
 
 <script>
+/* FORCE ABOUT LABEL — WIX SAFE */
+document.addEventListener("DOMContentLoaded", () => {
+    const oramBtn = document.querySelector('[data-robo="ORAM"]');
+    if (oramBtn) {
+        oramBtn.textContent = "ABOUT";
+    }
+});
+
 const terminal = document.getElementById("terminal");
 const input = document.getElementById("terminal-input");
 const inputText = document.getElementById("input-text");
@@ -128,73 +136,4 @@ buttons.forEach(btn => {
     });
 });
 
-input.addEventListener("input", () => {
-    inputText.textContent = input.value;
-});
-
-/* ELASTIC SCROLL — SINGLE SOURCE OF TRUTH */
-function scrollToBottom() {
-    requestAnimationFrame(() => {
-        terminal.scrollTop = terminal.scrollHeight;
-    });
-}
-
-function typeWriter(text, el) {
-    let i = 0;
-    function step() {
-        el.textContent += text.charAt(i++);
-        scrollToBottom();
-        if (i < text.length) setTimeout(step, 30);
-    }
-    step();
-}
-
-input.addEventListener("keydown", async e => {
-    if (e.key !== "Enter") return;
-
-    const command = input.value.trim();
-    if (!command) return;
-
-    const userLine = document.createElement("div");
-    userLine.className = "line";
-    userLine.textContent = "> " + command;
-    terminal.appendChild(userLine);
-    scrollToBottom();
-
-    input.value = "";
-    inputText.textContent = "";
-
-    try {
-        const res = await fetch("https://robot-unified-backend.onrender.com", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-                command,
-                forced_speaker: forcedSpeaker
-            })
-        });
-
-        const data = await res.json();
-        if (!data.messages) return;
-
-        for (const m of data.messages) {
-            const line = document.createElement("div");
-            line.className = `line agent-${m.agent}`;
-            line.textContent = `[${m.agent}] `;
-            terminal.appendChild(line);
-            scrollToBottom();
-            typeWriter(m.text, line);
-        }
-
-    } catch {
-        const err = document.createElement("div");
-        err.className = "line agent-SYSTEM";
-        err.textContent = "[SYSTEM] Connection error";
-        terminal.appendChild(err);
-        scrollToBottom();
-    }
-});
-</script>
-
-</body>
-</html>
+input.addEventListener("input",
